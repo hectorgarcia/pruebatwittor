@@ -6,7 +6,7 @@ const INMUTABLE_CACHE = 'inmutable-v1';
 // APP_SHELL: El esqueleto de nuestra aplicacion, 
 // sin recursos externos
 const APP_SHELL = [
-    '/',
+    //'/',
     'index.html',
     'css/style.css',
     'img/favicon.ico',
