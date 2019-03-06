@@ -28,6 +28,21 @@ const APP_SHELL_INMUTABLE = [
     'js/libs/jquery.js'
 ];
 
+
+// Guardar  en el cache dinamico
+function actualizaCacheDinamico( dynamicCache, req, res ) {
+    if ( res.ok ) {
+        return caches.open( dynamicCache ).then( cache => {
+            cache.put( req, res.clone() );
+            return res.clone();
+        });
+    } else {
+        return res;
+    }
+}
+
+
+
 self.addEventListener('install', e =>{
     const cacheStatic = caches.open( STATIC_CACHE ).then(cache => 
         cache.addAll( APP_SHELL));
@@ -44,7 +59,12 @@ self.addEventListener('activate', e => {
     // Borrar todos los caches que no se usan
     const respuesta = caches.keys().then( keys => {
         keys.forEach( key => {
-            if ( key !== STATIC_CACHE && key.includes('static') ){
+
+            if (  key !== STATIC_CACHE && key.includes('static') ) {
+                return caches.delete(key);
+            }
+
+            if (  key !== DYNAMIC_CACHE && key.includes('dynamic') ) {
                 return caches.delete(key);
             }
         });
@@ -52,3 +72,33 @@ self.addEventListener('activate', e => {
 
     e.waitUntil( respuesta );
 });
+
+
+
+
+self.addEventListener( 'fetch', e => {
+
+
+    const respuesta = caches.match( e.request ).then( res => {
+
+        if ( res ) {
+            return res;
+        } else {
+
+            return fetch( e.request ).then( newRes => {
+
+                return actualizaCacheDinamico( DYNAMIC_CACHE, e.request, newRes );
+
+            });
+
+        }
+
+    });
+
+
+
+    e.respondWith( respuesta );
+
+});
+
+
